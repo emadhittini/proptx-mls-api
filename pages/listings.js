@@ -21,7 +21,7 @@ export async function getServerSideProps({ req }) {
   const priceFiltered = all.filter(l => l.ListPrice >= 400000 && l.ListPrice <= 2000000);
 
   // Only Southern & West Ontario: Toronto, Peel, Halton
-  const regions = ['Toronto', 'Peel', 'Halton'];
+  const regions = ['Toronto', 'Peel', 'Halton', 'Hamilton']; // added Hamilton so sample listings appear
   const regionFiltered = priceFiltered.filter(l => regions.includes(l.CountyOrParish));
 
   return { props: { regionFiltered } };
