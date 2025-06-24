@@ -1,41 +1,30 @@
 // pages/listings.js
 
-// 1) Fetch listings on the server
-export async function getServerSideProps() {
-  const response = await fetch(
-    "https://query.ampre.ca/odata/Property?$top=10",
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.PROPTX_TOKEN}`,
-      },
-    }
-  );
+export async function getServerSideProps({ req }) {
+  // BUILD the base URL dynamically:
+  const protocol = req.headers['x-forwarded-proto'] || 'https';
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  const baseUrl = `${protocol}://${host}`;
 
-  if (!response.ok) {
-    return { props: { listings: [] } };
-  }
+  // Fetch from your own API proxy:
+  const response = await fetch(`${baseUrl}/api/listings`);
+  const listings = response.ok ? await response.json() : [];
 
-  const data = await response.json();
-  return { props: { listings: data.value } };
+  return { props: { listings } };
 }
 
-// 2) Render listings with black/red/white theme
 export default function ListingsPage({ listings }) {
   return (
     <div style={{
-      background: "#000",
-      color: "#fff",
-      fontFamily: "sans-serif",
-      padding: "40px",
+      background: "#000", color: "#fff",
+      fontFamily: "sans-serif", padding: 40,
       minHeight: "100vh"
     }}>
       <h2 style={{
-        color: "#ff3333",
-        fontSize: "32px",
-        marginBottom: "32px",
+        color: "#ff3333", fontSize: 32,
+        marginBottom: 32,
         borderBottom: "2px solid #ff3333",
-        paddingBottom: "8px",
-        textTransform: "uppercase"
+        paddingBottom: 8, textTransform: "uppercase"
       }}>
         Featured Listings
       </h2>
@@ -43,13 +32,13 @@ export default function ListingsPage({ listings }) {
       <div style={{
         display: "grid",
         gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-        gap: "24px"
+        gap: 24
       }}>
         {listings.map((item, i) => (
           <div key={i} style={{
             background: "#111",
             border: "1px solid #ff3333",
-            borderRadius: "12px",
+            borderRadius: 12,
             overflow: "hidden",
             boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
             transition: "transform 0.3s, box-shadow 0.3s",
@@ -69,15 +58,13 @@ export default function ListingsPage({ listings }) {
               alt="Listing"
               style={{
                 width: "100%",
-                height: "200px",
+                height: 200,
                 objectFit: "cover"
               }}
             />
-            <div style={{ padding: "16px" }}>
+            <div style={{ padding: 16 }}>
               <h3 style={{
-                margin: "0 0 8px 0",
-                fontSize: "20px",
-                color: "#fff"
+                margin: "0 0 8px 0", fontSize: 20, color: "#fff"
               }}>
                 {item.StreetNumber} {item.StreetName} — ${item.ListPrice}
               </h3>
