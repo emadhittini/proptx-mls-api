@@ -4,8 +4,13 @@ export async function getServerSideProps() {
       Authorization: `Bearer ${process.env.PROPTX_TOKEN}`
     }
   });
+
   const data = await response.json();
-  return { props: { listings: data.value } };
+  return {
+    props: {
+      listings: data.value
+    }
+  };
 }
 
 export default function ListingsPage({ listings }) {
@@ -45,8 +50,11 @@ export default function ListingsPage({ listings }) {
               style={{
                 width: "100%",
                 height: "200px",
-                objectFit: "cover"
+                objectFit: "cover",
+                transition: "transform 0.3s",
               }}
+              onMouseOver={e => e.currentTarget.style.transform = "scale(1.05)"}
+              onMouseOut={e => e.currentTarget.style.transform = "scale(1.0)"}
             />
             <div style={{ padding: "16px" }}>
               <h3 style={{ marginBottom: "8px" }}>
@@ -65,3 +73,4 @@ export default function ListingsPage({ listings }) {
     </div>
   );
 }
+
