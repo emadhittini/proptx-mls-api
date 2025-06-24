@@ -7,14 +7,21 @@ const montserrat = Montserrat({
   weight: ['400', '700'],
 });
 
-// Server-side fetch
+// Server-side fetch and price filtering
 export async function getServerSideProps({ req }) {
   const protocol = req.headers['x-forwarded-proto'] || 'https';
   const host = req.headers['x-forwarded-host'] || req.headers.host;
   const baseUrl = `${protocol}://${host}`;
 
+  // Fetch listings
   const res = await fetch(`${baseUrl}/api/listings`);
-  const listings = res.ok ? await res.json() : [];
+  const allListings = res.ok ? await res.json() : [];
+
+  // Keep only properties between $400k and $2M
+  const listings = allListings.filter(
+    (item) => item.ListPrice >= 400000 && item.ListPrice <= 2000000
+  );
+
   return { props: { listings } };
 }
 
@@ -22,12 +29,13 @@ export default function ListingsPage({ listings }) {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(null);
 
-  const filtered = listings.filter(item => {
+  // Search filtering
+  const filtered = listings.filter((item) => {
     const text = `${item.StreetNumber} ${item.StreetName} ${item.City}`.toLowerCase();
     return text.includes(query.toLowerCase());
   });
 
-  // Styles
+  // Styles for modal
   const overlayStyle = {
     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
     background: 'rgba(0,0,0,0.8)', display: 'flex',
@@ -50,7 +58,7 @@ export default function ListingsPage({ listings }) {
         type="text"
         placeholder="🔍 Search by address or city"
         value={query}
-        onChange={e => setQuery(e.target.value)}
+        onChange={(e) => setQuery(e.target.value)}
         style={{
           width: '100%', maxWidth: 400,
           padding: '12px 16px', fontSize: '1rem',
@@ -65,13 +73,17 @@ export default function ListingsPage({ listings }) {
             background: '#111', border: '1px solid #ff3333', borderRadius: '12px', overflow: 'hidden',
             transition: 'transform 0.3s, box-shadow 0.3s', cursor: 'pointer'
           }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(255,51,51,0.4)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.6)'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(255,51,51,0.4)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.6)'; }}
           >
-            <img src={item.PhotoUrl || 'https://via.placeholder.com/600x400?text=No+Image'} alt="Listing" style={{ width: '100%', height: 200, objectFit: 'cover' }} />
+            <img
+              src={item.PhotoUrl || 'https://via.placeholder.com/600x400?text=No+Image'}
+              alt="Listing"
+              style={{ width: '100%', height: 200, objectFit: 'cover' }}
+            />
             <div style={{ padding: '16px' }}>
               <h3 style={{ margin: '0 0 8px', fontSize: '1.25rem' }}>{item.StreetNumber} {item.StreetName}</h3>
-              <p style={{ margin: '4px 0', fontSize: '0.9rem' }}>${item.ListPrice.toLocaleString()}</p>
+              <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#ccc' }}>${item.ListPrice.toLocaleString()}</p>
             </div>
           </div>
         ))}
@@ -79,12 +91,16 @@ export default function ListingsPage({ listings }) {
 
       {selected && (
         <div style={overlayStyle} onClick={() => setSelected(null)}>
-          <div style={modalStyle} onClick={e => e.stopPropagation()}>
+          <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
             <button onClick={() => setSelected(null)} style={closeStyle}>&times;</button>
             <h3 style={{ margin: '0 0 16px' }}>{selected.StreetNumber} {selected.StreetName}</h3>
             <p style={{ color: '#ccc', marginBottom: '16px' }}>{selected.PublicRemarks}</p>
             {selected.PhotoUrl && (
-              <img src={selected.PhotoUrl} alt="Main" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', borderRadius: '4px' }} />
+              <img
+                src={selected.PhotoUrl}
+                alt="Main"
+                style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', borderRadius: '4px' }}
+              />
             )}
           </div>
         </div>
